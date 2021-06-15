@@ -1,0 +1,168 @@
+---
+title: "Matching participants"
+output: 
+  html_document: 
+    toc: no
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Matching criteria
+
+> "match each new participant from the non-vulnerable population to each participant from the vulnerable population by age and sex."
+
+
+  
+```{r setup, include=FALSE}
+
+# source("_packages.R")
+
+  # NEW DF ------------------------------------------------------------------
+
+  targets::tar_load(DF_matched)
+  targets::tar_load(DF_clean)
+  targets::tar_load(DF_joined)
+
+
+# Prepare data -------------------------------------------------------------
+
+  # Matching is done in create_DF_matched()  
+  
+  DF_matching = 
+    DF_matched$DF_matching_old_COUNT %>% 
+    left_join(DF_matched$DF_matching_new_COUNT, by = c("DEMOGR3_01_DIR", "DEMOGR3_02_DIR")) %>% 
+    mutate(MISSING = 
+             case_when(
+               count_old - count_new <= 0 ~ 0L,
+               is.na(count_new) ~ count_old,
+               TRUE ~ count_old - count_new
+               )) 
+
+  
+  DIFF1 = clock::date_today(zone = "UTC") - as.Date(min(DF_clean$datetime),'%Y-%m-%dT%H:%M:%S')
+  DIFF2 = clock::date_today(zone = "UTC") - as.Date("2021-03-12",'%Y-%m-%d')
+  days_collecting_data1 = as.numeric(DIFF1)
+  days_collecting_data2 = as.numeric(DIFF2)
+  
+  TABLE_matching =
+    DF_matching %>% 
+    summarise(NEEDED = sum(count_old),
+              MISSING = sum(MISSING),
+              MATCHED = NEEDED - MISSING,
+              `days since start` = days_collecting_data1,
+              `days since 12-03` = days_collecting_data2) %>% 
+    mutate(ETA = paste0(round(MISSING / (MATCHED / `days since 12-03`), 0), " days"))
+  
+  
+  # Human readable table with last participants missing
+  table_missing = 
+    DF_matching %>% 
+    filter(MISSING > 0) %>% 
+    rename(edad = DEMOGR3_01_DIR,
+           genero = DEMOGR3_02_DIR) %>% 
+    select(genero, edad, MISSING) %>% 
+    mutate(genero = 
+             case_when(
+               genero == 1 ~ "hombre",
+               genero == 0 ~ "mujer"
+             )) %>% 
+    arrange(desc(MISSING))
+    
+  save_files(table_missing, short_name_scale = "missing", is_scale = FALSE)
+```
+
+## Summary {.tabset}
+
+`r nrow(DF_joined %>% drop_na(COVIDCONTROL_01_DIR))` participants completed the full protocol. After filtering by exclusion criteria, we can match `r TABLE_matching$MATCHED`. Still  `r TABLE_matching$MISSING` out of `r TABLE_matching$NEEDED` to go  (`r round(TABLE_matching$MISSING / TABLE_matching$NEEDED, 2) * 100`%).  
+
+---  
+
+### Overview
+
+<div align="center">
+
+```{r overview, echo=FALSE}
+DT::datatable(TABLE_matching,
+              width = "80%",
+              rownames = FALSE,
+              options = list(dom = 't',
+                             pageLength = 20))
+```
+
+---  
+
+![](`r here::here("outputs/plots/plot_form_progress.png")`)
+
+
+### Exclusion criteria
+
+```{r criteria, echo=FALSE}
+TABLE_exclusion_criteria =
+  DF_joined %>% 
+    select(id, matches("DEMOGR3"), AIM_DIRt) %>% 
+    summarize(
+        DEMOGR3_01_DIR = sum(DEMOGR3_01_DIR < 18, na.rm = TRUE), # Indica tu edad 
+        DEMOGR3_03_DIR = sum(DEMOGR3_03_DIR != 1,  na.rm = TRUE),# ¿Usted nació en Chile?
+        DEMOGR3_04_DIR = sum(DEMOGR3_04_DIR != 1,  na.rm = TRUE),# ¿Usted vive hace más de 10 años en Chile?
+        DEMOGR3_06_DIR = sum(DEMOGR3_06_DIR != 0,  na.rm = TRUE),# Durante los últimos 12 meses ¿Ha sido diagnosticado/a y/o tratado/a por algún problema Psicológico o Psiquiátrico?
+        DEMOGR3_07_DIR = sum(DEMOGR3_07_DIR != 0,  na.rm = TRUE),# ¿Usted tiene actualmente alguno de los siguientes diagnósticos: Esquizofrenia, Depresión Mayor, Epilepsia grave, Traumatismo en…
+        DEMOGR3_08_DIR = sum(DEMOGR3_08_DIR != 0,  na.rm = TRUE),# ¿Tiene algún problema visual o auditivo que le impida responder esta encuesta sin ayuda?
+        AIM_DIRt = sum(!AIM_DIRt %in% c("ab", "c1a", "c1b", "c2"),  na.rm = TRUE) # Middle and high income
+    ) %>% 
+    rename(
+      age = DEMOGR3_01_DIR,
+      born_chile = DEMOGR3_03_DIR,
+      chile_10years = DEMOGR3_04_DIR,
+      psychological_diagnosis = DEMOGR3_06_DIR,
+      psychiatric_disorder = DEMOGR3_07_DIR,
+      auditive_visual_issues = DEMOGR3_08_DIR,
+      socioeconomic = AIM_DIRt
+    ) %>% 
+    pivot_longer(everything(), names_to = "criteria", values_to = "number_of_exclusions") %>% 
+    mutate(criteria_detail = 
+             case_when(
+               criteria == "age" ~ "age = 18 or older",
+               criteria == "born_chile" ~ "Born in Chile = yes",
+               criteria == "chile_10years" ~ "More than 10 years in Chile  = yes",
+               criteria == "psychological_diagnosis" ~ "Psychological or Psychiatrical diagnosis in last 12 months = no",
+               criteria == "psychiatric_disorder" ~ "Esquizofrenia, Depresión Mayor, Epilepsia grave, Traumatismo... = no",
+               criteria == "auditive_visual_issues" ~ "visual or auditive issues = no",
+               criteria == "socioeconomic" ~ "Socioeconomic group = ab, c1a, c1b, c2")) %>% 
+    select(criteria, criteria_detail, number_of_exclusions)
+    
+
+DT::datatable(TABLE_exclusion_criteria,
+              width = "90%",
+              rownames = FALSE,
+              options = list(dom = 't',
+                             pageLength = 20))
+    
+  
+```
+
+  
+### Missing participants  
+  
+```{r missing-table, echo=FALSE}
+
+DT::datatable(table_missing, filter = 'top', rownames = FALSE, options = list(dom = 'ltip', pageLength = 60)) %>% 
+  DT::formatStyle(
+    columns = c("MISSING"),
+    backgroundColor = DT::styleInterval(cuts = c(0, 1, 5, 10), c('#34bf02', '#90c75a', '#cfe868', '#FFCC00', '#CC0000')))
+
+```
+ 
+### Full table  
+  
+```{r full-table, echo=FALSE}
+
+DT::datatable(DF_matching, filter = 'top', rownames = FALSE, options = list(dom = 'ltip', pageLength = 60)) %>% 
+  DT::formatStyle(
+    columns = c("MISSING"),
+    backgroundColor = DT::styleInterval(cuts = c(0, 1, 5, 10), c('#34bf02', '#90c75a', '#cfe868', '#FFCC00', '#CC0000')))
+
+
+```
+
+</div>

@@ -1,0 +1,385 @@
+---
+title: "Data Analysis Religiosity's Part on Social Adaptation"
+author: "Neely-Prado, Navarrete, van Elk, ??????, Huepe"
+date: "20-05-2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+params:
+  depends: ""
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE)
+
+
+# Preparation old data 
+
+DF_old = 
+  read_csv(here::here("data/2017_experimental_group.csv"), 
+           col_types = 
+             cols(
+              .default = col_double(),
+              ISD07 = col_character(),
+              ISD04 = col_character(),
+              ISD05 = col_character(),
+              ISD14 = col_character(),
+              ISD28 = col_character(),
+              EAR03 = col_character(),
+              EAR05 = col_character(),
+              EAR08 = col_character(),
+              EAR09 = col_character(),
+              EAR10 = col_character())) %>% 
+            filter(
+    grepl("chile|chileno|chilena|Chile", ISD04, ignore.case = TRUE) &
+      ISD08 >= 18 &
+      as.numeric(stringr::str_extract(ISD05, "[0-9]{1,3}")) >= 10) %>% 
+  drop_na(ISD07, ISD08, Religiosidad, Autoestima, SASS_Total) %>% 
+  select(ISD07, ISD04, ISD05, ISD08, ISD14, ISD28,
+         Reli01:Reli10, Religiosidad,
+         EAR01, EAR02, EAR03, EAR04, EAR05,EAR06,EAR07,EAR08,EAR09,EAR10, Autoestima,
+         SASS01:SASS21, SASS_Total) %>% 
+  filter(grepl("Chile|Chilena|chile|chilena|chileno|Chileno", ISD04))
+
+DF_old[DF_old=="Muy en desacuerdo"]<-"4"
+DF_old[DF_old=="En desacuerdo"]<-"3"
+DF_old[DF_old=="De acuerdo"]<-"2"
+DF_old[DF_old=="Muy de acuerdo"]<-"1"
+
+proy_no_na_old = DF_old %>% 
+  rowwise() %>% 
+  mutate(
+    anios_chile = as.integer(substr(ISD05, 1, 2)),
+    age = ISD08,
+    sex = ifelse(ISD07 == "Masculino", 1, 0),
+    edu_level = as.numeric(gsub("([0-9]+).*$", "\\1", ISD14))) %>%
+  mutate(
+    EAR03 = as.numeric(EAR03),
+    EAR05 = as.numeric(EAR05),
+    EAR08 = as.numeric(EAR08),
+    EAR09 = as.numeric(EAR09),
+    EAR10 = as.numeric(EAR10),
+    SASS00 = NA,
+  ) %>% 
+  filter(age >= 18 & anios_chile >= 10) %>% 
+  select(-contains("ISD"), -anios_chile) %>% 
+  mutate(group = "EX") 
+
+```
+
+```{r}
+# Preparation new data ----------------------------------------------------
+id_match = read_csv(here::here("outputs/data/DF_matched.csv"), 
+                    col_types = 
+                      cols(
+                        id_old = col_double(),
+                        DEMOGR3_01_DIR = col_double(),
+                        DEMOGR3_02_DIR = col_double(),
+                        ROW = col_double(),
+                        id = col_character())) %>% pull(id)
+
+data_new = read_csv(here::here("outputs/data/DF_joined.csv")) %>% filter(id %in% id_match)
+
+DF_new = data_new %>% transmute(
+  id = id,
+  sex = DEMOGR3_02_DIR, # 1 = Hombre; 0 = Mujer ; 2 = otro
+  age = DEMOGR3_01_DIR,
+  edu_level = DEMOGR3_05_DIR,
+  criterio_exclusion_nac =  DEMOGR3_03_DIR, # ¿Usted nació en Chile?
+  criterio_exclusion_nac10 =  DEMOGR3_04_DIR, # ¿Usted vive hace más de 10 años en Chile?
+  criterio_exclusion_psi = DEMOGR3_07_DIR,
+  criterio_exclusion_fis = DEMOGR3_08_DIR,
+  clasificacion_gse = AIM_DIRt,
+  Reli01 = SCSORF_01_DIR,
+  Reli02 = SCSORF_02_DIR,
+  Reli03 = SCSORF_03_DIR,
+  Reli04 = SCSORF_04_DIR,
+  Reli05 = SCSORF_05_DIR,
+  Reli06 = SCSORF_06_DIR,
+  Reli07 = SCSORF_07_DIR,
+  Reli08 = SCSORF_08_DIR,
+  Reli09 = SCSORF_09_DIR,
+  Reli10 = SCSORF_10_DIR,
+  EAR01 = EAR_01_DIR,
+  EAR02 = EAR_02_DIR,
+  EAR03 = EAR_03_DIR,
+  EAR04 = EAR_04_DIR,
+  EAR05 = EAR_05_DIR,
+  EAR06 = EAR_06_DIR,
+  EAR07 = EAR_07_DIR,
+  EAR08 = EAR_08_DIR,
+  EAR09 = EAR_09_DIR,
+  EAR10 = EAR_10_DIR,
+  SASS00 = SASS_01_DIR,
+  SASS01 = SASS_02_DIR,
+  SASS02 = SASS_03_DIR,
+  SASS03 = SASS_04_DIR,
+  SASS04 = SASS_05_DIR,
+  SASS05 = SASS_06_DIR,
+  SASS06 = SASS_07_DIR,
+  SASS07 = SASS_08_DIR,
+  SASS08 = SASS_09_DIR,
+  SASS09 = SASS_10_DIR,
+  SASS10 = SASS_11_DIR,
+  SASS11 = SASS_12_DIR,
+  SASS12 = SASS_13_DIR,
+  SASS13 = SASS_14_DIR,
+  SASS14 = SASS_15_DIR,
+  SASS15 = SASS_16_DIR,
+  SASS16 = SASS_17_DIR,
+  SASS17 = SASS_18_DIR,
+  SASS18 = SASS_19_DIR,
+  SASS19 = SASS_20_DIR,
+  SASS20 = SASS_21_DIR,
+  SASS21 = SASS_22_DIR,
+  Autoestima = EAR_DIRt,
+  SASS_Total = SASS_DIRt,
+  Religiosidad = SCSORF_DIRt) %>% 
+  distinct(id, .keep_all = TRUE) %>% 
+  select(-contains("criterio"), -"clasificacion_gse", -"id") %>% mutate(group = "CN")
+
+matched = DF_new %>% rbind(proy_no_na_old)
+
+```
+## Reliability
+
+To start the analysis, we will get Cronbach's alpha to check each questionnaires reliability. In general all questionnaires show good levels of reliability.
+
+### Religiosity 
+
+```{r}
+# Reliability -------------------------------------------------------------
+rel = matched %>% select(Reli01:Reli10) 
+psych::alpha(rel)[1] %>% kable()
+```
+
+### Social Adaptation
+
+```{r}
+sass = matched %>% mutate(
+  sass_01final = ifelse(!is.na(SASS01), SASS01, SASS02)
+) %>% select(sass_01final, SASS03:SASS21)
+psych::alpha(sass)[1] %>% kable()
+```
+
+
+### Self-Esteem
+
+```{r}
+
+aut = matched %>% select(EAR01:EAR10)
+psych::alpha(aut)[1] %>% kable
+```
+
+
+## Exploration
+
+### Distributions
+
+
+```{r cars}
+matched_long = matched %>% select(Religiosidad, SASS_Total, Autoestima, group) %>% 
+  pivot_longer(cols = 1:3, names_to = "variable", values_to = "values")
+
+library(hrbrthemes)
+ggplot(matched_long, aes(values, fill = as.factor(group))) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    facet_wrap(~variable) +
+    labs(fill="") 
+
+```
+
+### Descriptives 
+
+```{r}
+sex_table = table(matched$sex)
+females_n = sex_table[1]
+males_n = sex_table[2]
+total = females_n + males_n
+
+age_mean_females = matched %>% filter(sex == 0) %>% select(age) %>% pull() %>% mean()
+age_mean_males = matched %>% filter(sex == 1) %>% select(age) %>% pull() %>% mean()
+
+```
+
+`r females_n` females (`r round(females_n/total*100, 2)`%) and `r `males_n` males (`r round(males_n/total*100, 2)`%) enrolled in this study, with an average age of `r age_mean_females` and `r age_mean_males`, respectively. 
+
+The following table show the descriptive statistics for each independent and dependent variable.
+
+```{r}
+### TABLE 1(mean, sd, variance, range, assymetry, kurtosis). This should be the table we insert to the paper
+
+descriptives = describe.by(matched %>% select(Religiosidad, SASS_Total, Autoestima)) 
+descriptives = descriptives %>% as.data.frame() %>% select(mean, sd, min, max, skew, kurtosis)
+descriptives %>%  kable()
+```
+
+
+### Correlations
+
+Independent variables are not correlated. Regarding the dependent variable, it has a medium correlation with self-esteem (r = .43, p < .001), and non correlation with religiosity 
+
+```{r}
+library(apaTables)
+apa.cor.table(matched %>% select(Religiosidad, SASS_Total, Autoestima), filename = here::here("outputs/correlation_table.doc"), table.number = 2,show.conf.interval = F)
+```
+
+### ANOVA's
+
+We will explore if there are mean differences between groups for each independent variable.
+
+#### Self-esteem
+
+There is no statistical difference between self-esteem scores in the vulnerable group vs the non-vulnerable group
+
+```{r}
+
+summary(aov(Autoestima ~ group,data = matched))
+```
+
+```{r}
+ggplot(matched) +
+  aes(x = group, y = Autoestima) +
+  geom_boxplot()
+```
+
+#### Religiosity
+
+There is no statistical difference between religiosity scores in the vulnerable group vs the non-vulnerable group
+
+```{r}
+summary(aov(Religiosidad ~ group,data = matched))
+```
+
+
+```{r}
+ggplot(matched) +
+  aes(x = group, y = Religiosidad) +
+  geom_boxplot()
+```
+
+#### Social Adaptation
+
+Social adaptation scores are higher in the non-vulnerable group than in the non-vulnerable group
+
+```{r}
+summary(aov(SASS_Total ~group,data = matched))
+```
+
+
+
+```{r}
+ggplot(matched) +
+  aes(x = group, y = SASS_Total) +
+  geom_boxplot()
+```
+
+## Regressions
+
+Since we propose a moderated mediation model, we first need to analyze if our main independent variable predicts variations in religiosity, the independent variable, and variations in self-esteem, the mediator. If it is not the case, then we can reject the moderated mediation model as a hypothesis of how these variables interact between eachother
+
+### Religiosity
+
+Now we will explore if Religiosity predicts Social Adaptation. As we can see from the outputs below, we can reject the hypothesis that Religiosity predicts Social Adaptation.
+
+```{r}
+summary(lm(SASS_Total ~ Religiosidad , matched))
+```
+
+The following regression explores if Religiosity predicts Self-Esteem. As we can see from the outputs below, we can reject the hypothesis that Religiosity predicts Self-Esteem.
+
+```{r}
+summary(lm(Autoestima ~ Religiosidad, matched))
+```
+
+As we can see, from the previous outputs, religiosity has no significant effect either on the independent variable nor on the mediator. Thus, we can say that religiosity does not predict social adaptation through self-esteem in any case.
+
+Just for the sake of exploration we will take a look at how our main variables interact with one another separating the sample by groups. As we can see the only noticeable relationship is between self-esteem and social adaptation. Later on we will explore more this outcome to test if it is significant or not.
+
+```{r}
+p1 = ggplot(matched, aes(x = Autoestima, y = SASS_Total, color = group)) + 
+  geom_point() +
+  stat_smooth(method = "lm") +
+  xlab("Self-Esteem") +
+  ylab("Social Adaptation") +
+  labs(color = "Group") +
+  theme(legend.position = "none")
+
+p2 = ggplot(matched, aes(x = Religiosidad, y = SASS_Total, color = group)) + 
+  geom_point() +
+  stat_smooth(method = "lm") +
+  xlab("Religiosity") +
+  ylab("Social Adaptation") +
+  labs(color = "Group") +
+  ggtitle("")+
+  theme(legend.position = "none")
+
+p3 = ggplot(matched, aes(x = Religiosidad, y = Autoestima, color = group)) + 
+  geom_point() +
+  stat_smooth(method = "lm") +
+  xlab("Religiosity") +
+  ylab("Self-Esteem") +
+  labs(color = "Group") +
+  ggtitle("")+
+  theme(legend.position = "bottom")
+
+
+library(ggpubr)
+ggarrange(p1, p2, p3, ncol=3, nrow=1, common.legend = TRUE, legend="bottom")
+```
+
+### Self-Esteem
+
+Although there is no evidence for moderated mediation, we do perceive some differences between social adaptation and self-esteem depending on group in the regression plots. Now we will explore if these apparent differences are statistical ones. We will create two regression models, one to see if self-esteem predicts social adaptation (controlling for religiosity), and other to see if that regression is moderated by living or not in vulnerable populations. We will analyze if both models are statistically different, interpreting p values and effect sizes.
+ 
+#### Model1 : Self-esteem and social adaptation regression
+
+```{r}
+# Usar librería performance
+# linea base: autoestima se relaciona o no con sass. Luego vemos que cambia por grupo (se fortalece)
+# y el modelo es mejor (BIC, AIC..). 
+# Pero luego vemos que esa moderación se pierde cuando sumamos religiosidad.
+model1 = lm(SASS_Total ~ Autoestima + Religiosidad, matched)
+summary(model1)
+```
+
+
+#### Model2 Self-esteem and social adaptation, moderated by group
+
+```{r}
+model2 = lm(SASS_Total ~ Autoestima * group, matched)
+summary(model2)
+
+```
+
+#### ANOVA between both models
+
+The output below shows that there is a significant difference between both models (p < .001)
+
+```{r}
+anova(model1, model2)
+```
+
+Below we can see that there is a moderation of group in the capacity that self-esteem has on predicting social adaptation. 27.2% of social adaptation's variance is explained when including the grouping variable, while only 18.3% is explained when not including it.
+
+```{r}
+performance::compare_performance(model1, model2) %>% kable()
+```
+
+
+```{r fig.width=7, fig.height = 5}
+
+ggplot(matched, aes(x = Autoestima, y = SASS_Total, color = group)) + 
+  geom_point() +
+  stat_smooth(method = "lm") +
+  xlab("Self-Esteem") +
+  ylab("Social Adaptation") +
+  labs(color = "Group") +
+  theme(legend.position = "right")
+```
+
