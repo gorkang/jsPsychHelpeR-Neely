@@ -1,28 +1,20 @@
 
-# Install packages ---------------------------------------------------------
+# Initial setup -----------------------------------------------------------
 
-# Run the fist time or when you have an error
-  
+  # Run the fist time or when you have an error
   # targets::tar_renv()
   # source("setup/setup.R")
 
 
+# Load libraries ---------------------------------------------------------
+
+  lapply(list.files("./R", full.names = TRUE, pattern = ".R$"), source)
+
+
 # Sync data from server ---------------------------------------------------
   
-  # EDIT ONLY THE id_protocol variable value
-  id_protocol = 3
-  
-  # If you do not have the .credentials file: rstudioapi::navigateToFile("setup/setup_server_credentials.R")
-  list_credentials = source(".vault/.credentials")
-  if (!dir.exists(paste0(getwd(), '/data/' , id_protocol, '/'))) dir.create(paste0(getwd(), '/data/' , id_protocol, '/'))
-  system(paste0('sshpass -p ', list_credentials$value$password, ' rsync -av --rsh=ssh ', list_credentials$value$user, "@", list_credentials$value$IP, ":", list_credentials$value$main_FOLDER, id_protocol, '/.data/ ', getwd(), '/data/' , id_protocol, '/'))
+  update_data(id_protocol = 3, sensitive_tasks = "DEMOGR")
 
-  # RE-synched files (???)
-  # 20210615: 10.093 files
-  # 3_Goodbye_original_2021-03-12T17:26:51_962251989.csv
-  # 20210615: 10.094 files
-  # 3_Goodbye_original_2021-03-12T16:54:14_965155738.csv
-  
 
 # CHECK and DELETE duplicates ---------------------------------------------
 
@@ -30,10 +22,11 @@
   
   # Check duplicates and their differences
   CHECK = delete_duplicates(folder = "data/3", check = TRUE)
+  CHECK_sensitive = delete_duplicates(folder = ".vault/data", check = TRUE)
   
   # **DELETE** NEWER DUPLICATES
   CHECK = delete_duplicates(folder = "data/3", check = FALSE)
-
+  CHECK_sensitive = delete_duplicates(folder = ".vault/data", check = FALSE)
     
 # Run project -------------------------------------------------------------  
   
