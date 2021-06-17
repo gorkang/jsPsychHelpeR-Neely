@@ -245,7 +245,7 @@ save_files <- function(DF, short_name_scale, is_scale = TRUE, is_sensitive = FAL
   
   # Select path based on nature of the data
   if (is_sensitive == TRUE) {
-    data_path = ".vault/data/"
+    data_path = ".vault/outputs/data/"
   } else {
     data_path = "outputs/data/"
   }
@@ -505,9 +505,54 @@ show_progress_pid <- function(pid = 3, files_vector, last_task = "Goodbye", goal
   }
   
   OUTPUT = list(TABLE = TABLE, 
+                DF_files = DF_files,
                 DF_progress = DF_progress,
                 PLOT_progress = PLOT_progress)
   
   return(OUTPUT)
+  
+}
+
+
+
+#' update_data
+#' Update data/id_protocol folder using rsync
+#'
+#' @param id_protocol 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+update_data <- function(id_protocol, sensitive_tasks = c("")) {
+  
+  # DEBUG
+  # id_protocol = 3
+  # sensitive_tasks = c("DEMOGR")
+  
+  cat(crayon::yellow(paste0("Synching files from pid ", id_protocol, "\n")))
+  
+  if (!file.exists(".vault/.credentials")) {
+    # If you do not have the .credentials file: rstudioapi::navigateToFile("setup/setup_server_credentials.R")
+    cat(crayon::red("The file .vault/.credentials does NOT exist. Follow the steps in: "), "\n", crayon::yellow('rstudioapi::navigateToFile("setup/setup_server_credentials.R")\n'))
+    stop("CAN'T find .vault/.credentials")
+  }
+  
+  list_credentials = source(".vault/.credentials")
+  if (!dir.exists(paste0(getwd(), '/data/' , id_protocol, '/'))) dir.create(paste0(getwd(), '/data/' , id_protocol, '/'))
+  system(paste0('sshpass -p ', list_credentials$value$password, ' rsync -av --rsh=ssh ', list_credentials$value$user, "@", list_credentials$value$IP, ":", list_credentials$value$main_FOLDER, id_protocol, '/.data/ ', getwd(), '/data/' , id_protocol, '/'))
+  
+  
+  if (sensitive_tasks != "") {
+    # MOVE sensitive data to .vault
+    data_folder = paste0("data/", id_protocol)
+    sensitive_files = list.files(data_folder, pattern = paste(sensitive_tasks, collapse = "|"), full.names = TRUE)
+    
+    destination_folder = paste0(".vault/data")
+    destination_names = gsub(data_folder, destination_folder, sensitive_files)
+    file.rename(from = sensitive_files, to = destination_names)
+    
+    cat(crayon::green(paste0("Moved ", length(destination_names), " files matching '", paste(sensitive_tasks, collapse = "|"), "' to ", destination_folder, "\n")))
+  }
   
 }

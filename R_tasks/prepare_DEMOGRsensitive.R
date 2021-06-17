@@ -1,4 +1,4 @@
-##' Prepare DEMOGRNEELY
+##' Prepare DEMOGRsensitive
 ##'
 ##' Template for the functions to prepare specific tasks. Most of this file should not be changed
 ##' Things to change: 
@@ -6,7 +6,7 @@
 ##'   - dimensions parameter in standardized_names()
 ##'   - 2 [ADAPT] chunks
 ##'
-##' @title prepare_DEMOGRNEELY
+##' @title prepare_DEMOGRsensitive
 ##'
 ##' @param short_name_scale_str 
 ##' @param DF_clean
@@ -14,18 +14,27 @@
 ##' @return
 ##' @author gorkang
 ##' @export
-prepare_DEMOGR3 <- function(DF_clean, short_name_scale_str) {
+prepare_DEMOGRsensitive <- function(short_name_scale_str) {
 
   # DEBUG
-  # debug_function(prepare_DEMOGR3)
+  # debug_function(prepare_DEMOGRsensitive)
 
+  
+
+  # Read sensitive data -----------------------------------------------------
+  input_files_sensitive = list.files(path = ".vault/data", pattern = "*.csv", full.names = TRUE)
+  DF_raw_sensitive = read_data(input_files_sensitive, anonymize = FALSE)
+  DF_clean_sensitive = create_clean_data(DF_raw_sensitive)
+  
+  
+  
   # Standardized names ------------------------------------------------------
   standardized_names(short_name_scale = short_name_scale_str, 
                      # dimensions = c("NameDimension1", "NameDimension2"), # Use names of dimensions, "" or comment out line
                      help_names = FALSE) # help_names = FALSE once the script is ready
   
   # Create long -------------------------------------------------------------
-  DF_long_RAW = create_raw_long(DF_clean, short_name_scale = short_name_scale_str, numeric_responses = FALSE)
+  DF_long_RAW = create_raw_long(DF_clean_sensitive, short_name_scale = short_name_scale_str, numeric_responses = FALSE)
   
   # Show number of items, responses, etc. [uncomment to help prepare the test] 
   # prepare_helper(DF_long_RAW, show_trialid_questiontext = TRUE)
@@ -93,20 +102,7 @@ prepare_DEMOGR3 <- function(DF_clean, short_name_scale_str) {
     ) %>% 
     mutate(DIR = as.numeric(DIR))
     
-    
-    # Invert items
-    # mutate(
-    #   DIR = 
-    #     case_when(
-    #       DIR == 9999 ~ DIR, # To keep the missing values unchanged
-    #       grepl(items_to_reverse, trialid) ~ (6 - DIR),
-    #       TRUE ~ DIR
-    #     )
-    # )
-    
-  # [END ADAPT]: ***************************************************************
-  # ****************************************************************************
-    
+
 
   # Create DF_wide_RAW_DIR -----------------------------------------------------
   DF_wide_RAW_DIR =
@@ -121,32 +117,23 @@ prepare_DEMOGR3 <- function(DF_clean, short_name_scale_str) {
            !!name_DIR_NA := rowSums(is.na(select(., -matches(items_to_ignore) & matches("_DIR"))))) 
       
     
-  # [ADAPT]: Scales and dimensions calculations --------------------------------
-  # ****************************************************************************
-    # [USE STANDARD NAMES FOR Scales and dimensions: name_DIRt, name_DIRd1, etc.] Check with: standardized_names(help_names = TRUE)
 
-    # mutate(
+  # SENSITIVE ---------------------------------------------------------------
 
-      # Score Dimensions (see standardized_names(help_names = TRUE) for instructions)
-      # !!name_DIRd1 := rowSums(select(., matches("02|04|05") & matches("_DIR$")), na.rm = TRUE), 
-      # !!name_DIRd2 := rowSums(select(., matches("01|03|08") & matches("_DIR$")), na.rm = TRUE), 
-      
-      # Score Scale
-      # !!name_DIRt := rowSums(select(., matches("_DIR$")), na.rm = TRUE)
-      
-    # )
-    
-  # [END ADAPT]: ***************************************************************
-  # ****************************************************************************
-
+  # Item DEMOGR3_09 contains sensitive data
+  DF_output = DF_wide_RAW_DIR %>% select(-starts_with("DEMOGR3_09"))
+  DF_sensitive = DF_wide_RAW_DIR %>% select(id, starts_with("DEMOGR3_09"))
+  
 
   # CHECK NAs -------------------------------------------------------------------
-  check_NAs(DF_wide_RAW_DIR)
+  check_NAs(DF_output)
   
   # Save files --------------------------------------------------------------
-  save_files(DF_wide_RAW_DIR, short_name_scale = short_name_scale_str, is_scale = TRUE)
+  save_files(DF_output, short_name_scale = short_name_scale_str, is_scale = TRUE, is_sensitive = FALSE)
+  save_files(DF_sensitive, short_name_scale = short_name_scale_str, is_scale = TRUE, is_sensitive = TRUE)
+  
   
   # Output of function ---------------------------------------------------------
-  return(DF_wide_RAW_DIR) 
+  return(DF_output) 
  
 }

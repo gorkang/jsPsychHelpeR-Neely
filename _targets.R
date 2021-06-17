@@ -45,6 +45,7 @@ targets <- list(
   
   # RAW data
   tar_target(input_files, list.files(path = "data/3", pattern = "*.csv", full.names = TRUE), format = "file"), #, format = "file" (IF files in vault/ first run fails)
+  
   tar_target(DF_raw, read_data(input_files, anonymize = FALSE)),
   tar_target(tests_DFraw, tests_DF_raw(DF_raw), priority = 1),
   
@@ -58,11 +59,13 @@ targets <- list(
   
   ## Prepare tasks -----------------------------------------------------------
   
+  # SENSITIVE
+  tar_target(df_DEMOGRsensitive, prepare_DEMOGRsensitive(short_name_scale_str = "DEMOGR3")),
+  
   # [TODO]: Each of the individual tasks should have specific hardcoded TESTS!
   # [REMEMBER]: the target name needs to be ==  df_[short_name_scale_str]
   tar_target(df_AIM, prepare_AIM(DF_clean, short_name_scale_str = "AIM")),
   tar_target(df_COVIDCONTROL, prepare_COVIDCONTROL(DF_clean, short_name_scale_str = "COVIDCONTROL")),
-  tar_target(df_DEMOGR3, prepare_DEMOGR3(DF_clean, short_name_scale_str = "DEMOGR3")),
   tar_target(df_EAR, prepare_EAR(DF_clean, short_name_scale_str = "EAR")),
   tar_target(df_OTRASRELIG, prepare_OTRASRELIG(DF_clean, short_name_scale_str = "OTRASRELIG")),
   tar_target(df_PSS, prepare_PSS(DF_clean, short_name_scale_str = "PSS")),
@@ -74,7 +77,7 @@ targets <- list(
   tar_target(DF_joined, create_joined(
     df_AIM,
     df_COVIDCONTROL,
-    df_DEMOGR3,
+    df_DEMOGRsensitive,
     df_EAR,
     df_OTRASRELIG,
     df_PSS,
