@@ -16,8 +16,6 @@ editor_options:
   
 ```{r setup, include=FALSE}
 
-# source("_packages.R")
-
   # NEW DF ------------------------------------------------------------------
 
   targets::tar_load(DF_matched)
@@ -70,11 +68,13 @@ editor_options:
     arrange(desc(MISSING))
     
   save_files(table_missing, short_name_scale = "missing", is_scale = FALSE)
+  
+
 ```
 
 ## Summary {.tabset}
 
-`r nrow(DF_joined %>% drop_na(COVIDCONTROL_01_DIR))` participants completed the full protocol. After filtering by exclusion criteria, we can match `r TABLE_matching$MATCHED`. Still  `r TABLE_matching$MISSING` out of `r TABLE_matching$NEEDED` to go  (`r round(TABLE_matching$MISSING / TABLE_matching$NEEDED, 2) * 100`%).  
+`r nrow(DF_joined %>% drop_na(COVIDCONTROL_01_DIR))` participants completed the full protocol. After filtering by exclusion criteria, we can match `r TABLE_matching$MATCHED` out of  `r TABLE_matching$NEEDED`. `r TABLE_matching$MISSING`  to go (`r round(TABLE_matching$MISSING / TABLE_matching$NEEDED, 2) * 100`%).  
 
 ---  
 
