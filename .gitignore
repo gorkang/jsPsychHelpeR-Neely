@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.Renviron
 dev/
 
 # Do not upload _targets meta

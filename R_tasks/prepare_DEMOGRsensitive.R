@@ -23,7 +23,7 @@ prepare_DEMOGRsensitive <- function(short_name_scale_str) {
 
   # Read sensitive data -----------------------------------------------------
   input_files_sensitive = list.files(path = ".vault/data", pattern = "*.csv", full.names = TRUE)
-  DF_raw_sensitive = read_data(input_files_sensitive, anonymize = FALSE)
+  DF_raw_sensitive = read_data(input_files_sensitive, anonymize = FALSE, save_output = FALSE)
   DF_clean_sensitive = create_clean_data(DF_raw_sensitive)
   
   

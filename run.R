@@ -18,15 +18,13 @@
 
 # CHECK and DELETE duplicates ---------------------------------------------
 
-  source(here::here("R/delete_duplicates.R"))
-  
   # Check duplicates and their differences
-  CHECK = delete_duplicates(folder = "data/3", check = TRUE)
-  CHECK_sensitive = delete_duplicates(folder = ".vault/data", check = TRUE)
+  CHECK = delete_duplicates(folder = "data/3", check = TRUE, keep_which = "newer")
+  CHECK_sensitive = delete_duplicates(folder = ".vault/data", check = TRUE, keep_which = "newer")
   
   # **DELETE** NEWER DUPLICATES
-  CHECK = delete_duplicates(folder = "data/3", check = FALSE)
-  CHECK_sensitive = delete_duplicates(folder = ".vault/data", check = FALSE)
+  CHECK = delete_duplicates(folder = "data/3", check = FALSE, keep_which = "newer")
+  CHECK_sensitive = delete_duplicates(folder = ".vault/data", check = FALSE, keep_which = "newer")
     
 # Run project -------------------------------------------------------------  
   
