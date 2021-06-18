@@ -3,17 +3,20 @@
 #' Checks or deletes duplicate files, keeping the older file.
 #'
 #' @param folder 
-#' @param check 
+#' @param check TRUE/FALSE
+#' @param keep_which "older"/"newer"
 #'
 #' @return
 #' @export
 #'
 #' @examples
-delete_duplicates <- function(folder, check = TRUE) {
+delete_duplicates <- function(folder, check = TRUE, keep_which = "older") {
   
 # DEBUG
-  # folder = "data"
+  # folder = ".vault/data/"
+  # folder = "data/3"
   # check = TRUE
+  # keep_which = "newer"
   
   suppressPackageStartupMessages(source("_targets_packages.R"))
   
@@ -40,8 +43,21 @@ delete_duplicates <- function(folder, check = TRUE) {
   
   if (nrow(DUPLICATES) > 0) {
     
-    # Select the oldest file for each id/experimento
-    KEEP = DF_files %>% group_by(id, experimento) %>% filter(datetime == min(datetime))
+    if (keep_which == "older") {
+      
+      # Select the oldest file for each id/experimento
+      KEEP = DF_files %>% group_by(id, experimento) %>% filter(datetime == min(datetime))
+      
+    } else if (keep_which == "newer") {
+      
+      # Select the newest file for each id/experimento
+      KEEP = DF_files %>% group_by(id, experimento) %>% filter(datetime == max(datetime))
+      
+    } else {
+      cat(crayon::red("keep_which should be either 'older' or 'newer'"))
+      stop("Error in the keep_which parameter")
+    }
+    
     
     # Delete the rest
     DELETE = 
