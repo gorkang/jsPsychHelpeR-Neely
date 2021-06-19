@@ -61,7 +61,7 @@ targets <- list(
   ## Prepare tasks -----------------------------------------------------------
   
   # SENSITIVE
-  tar_target(df_DEMOGRsensitive, prepare_DEMOGRsensitive(short_name_scale_str = "DEMOGR3")),
+  tar_target(df_DEMOGR3, prepare_DEMOGRsensitive(short_name_scale_str = "DEMOGR3")),
   
   # [TODO]: Each of the individual tasks should have specific hardcoded TESTS!
   # [REMEMBER]: the target name needs to be ==  df_[short_name_scale_str]
@@ -78,7 +78,7 @@ targets <- list(
   tar_target(DF_joined, create_joined(
     df_AIM,
     df_COVIDCONTROL,
-    df_DEMOGRsensitive,
+    df_DEMOGR3,
     df_EAR,
     df_OTRASRELIG,
     df_PSS,
