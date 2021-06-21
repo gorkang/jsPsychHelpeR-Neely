@@ -1,0 +1,4 @@
+"success","procedure","trial_type","trial_index","time_elapsed","internal_node_id","view_history","rt","trialid","url"
+"true","Consent","fullscreen","0","3700","0.0-0.0-0.0","","","",""
+"","Consent","instructions","1","7061","0.0-1.0","[{""page_index"":0,""viewing_time"":3355}]","3355","Instructions",""
+"","Consent","external-html","2","10203","0.0-2.0","","2945.7950000069104","Consent_01","html/consent-neely.html"
