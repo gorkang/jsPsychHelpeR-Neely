@@ -9,7 +9,7 @@ testthat::test_that('Check if the snapshots do not change', {
     # IF THERE IN AN ERROR (eg. in df_AIM):
       # TARGET = read_rds("_targets/objects/df_AIM")
       # SNAPSHOT = read_rds("tests/testthat/_snaps/snapshots/df_AIM")
-      # waldo::compare(TARGET, SNAPSHOT)
+      # waldo::compare(SNAPSHOT,TARGET)
   
   
   # Name of test (should reflect the name of the file) ----------------------
