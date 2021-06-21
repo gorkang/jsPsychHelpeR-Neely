@@ -1,4 +1,12 @@
 
+###################### TODO ##############################################
+# https://github.com/gorkang/jsPsychHelpeR-Neely/issues/1
+
+# WARNING IN ANALYSIS: SHOULD BE psych::alpha(sass, check.keys=TRUE)[1] %>% kable()
+
+##########################################################################
+
+
 # Initial setup -----------------------------------------------------------
 
   # Run the fist time or when you have an error
