@@ -34,7 +34,7 @@ testthat::test_that('Check all input files have the essential columns', {
   
   
   # Essential columns
-  essential_columns = c("procedure", "trialid", "rt", "responses", "stimulus")
+  essential_columns = c("trialid", "rt", "responses", "stimulus") #procedure
   whitelist_tasks = c("Consent", "Goodbye")
   
   DF_columns_files = 
