@@ -4,6 +4,7 @@
 .Ruserdata
 .Renviron
 dev/
+*.insyncdl
 
 # Do not upload _targets meta
 _targets/meta/
