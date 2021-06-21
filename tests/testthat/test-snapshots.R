@@ -4,7 +4,7 @@ testthat::test_that('Check if the snapshots do not change', {
   # DEBUG
   
     # IF Test was skiped because: "On CRAN".
-      # Sys.setenv(NOT_CRAN = "true")
+      Sys.setenv(NOT_CRAN = "true")
     
     # IF THERE IN AN ERROR (eg. in df_AIM):
       # TARGET = read_rds("_targets/objects/df_AIM")
