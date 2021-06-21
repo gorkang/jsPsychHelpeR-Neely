@@ -21,7 +21,7 @@
   # Packages to load
   main_packages = c("cli", "crayon", "furrr", "patchwork", "renv", "tarchetypes", "targets", "testthat")
   data_preparation_packages = c("dplyr", "forcats", "here", "janitor", "purrr", "readr", "stringr", "tibble", "tidyr") 
-  data_analysis_packages = c("broom", "broom.mixed", "corrplot", "emmeans", "gmodels", "gt", "gtsummary", "irr", "knitr", "lavaan", "lme4", "parameters", "performance", "psych", "sjPlot", "stargazer")
+  data_analysis_packages = c("apaTables", "broom", "broom.mixed", "corrplot", "emmeans", "gmodels", "gt", "gtsummary", "irr", "knitr", "lavaan", "lme4", "parameters", "performance", "psych", "sjPlot", "stargazer")
   data_visualization_packages = c("ggalluvial", "ggridges")
   non_declared_dependencies = c("qs", "visNetwork", "webshot", "performance", "bs4Dash", "shinybusy", "clustermq", "shinyWidgets")
   extra_packages = c("shrtcts")
@@ -131,11 +131,8 @@ targets <- list(
   
   ## Tests -------------------------------------------------------------------
   
-  # [REMEMBER]: Have to manually put every target we have a test for here (except the automatic tests: 'input_files_automatic_tests_str' takes care of that)
-  tar_target(input_files_automatic_tests_str, list.files(path = "_targets/objects/", pattern = "df_*", full.names = FALSE, ignore.case = FALSE)),
-
-  tar_target(TESTS, test_testhat(input_files_automatic_tests_str = input_files_automatic_tests_str,
-                                 input_files,
+  # [REMEMBER]: Have to manually put every target we have a test for here
+  tar_target(TESTS, test_testhat(input_files,
                                  DF_raw,
                                  DF_clean,
                                  DICCIONARY_tasks,
