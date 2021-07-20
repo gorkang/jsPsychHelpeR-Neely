@@ -17,7 +17,7 @@ setup_shortcuts <- function() {
   file.copy(from = "setup/.shrtcts.R", to = paste0(fs::path_home(), "/.shrtcts.R"))
   file.copy(from = "setup/addins.json", to = paste0(fs::path_home_r(), "/.R/rstudio/keybindings/addins.json"))
   
-  cat(crayon::yellow("Aplying configuration. \n"))
+  cat(crayon::yellow("Applying shrtcts configuration. \n"))
   # shrtcts::edit_shortcuts()
   suppressMessages(shrtcts::add_rstudio_shortcuts())
   cat(crayon::green("Remember to restart the R session: Control + Shift + F10\n"))

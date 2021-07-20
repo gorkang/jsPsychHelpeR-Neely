@@ -1,7 +1,7 @@
 ---
 title: "Data Analysis Religiosity's Part on Social Adaptation"
-author: "Neely-Prado, Navarrete, van Elk, ??????, Huepe"
-date: "20-05-2021"
+author: "Neely-Prado, Navarrete, van Elk, Hola, Huepe"
+date: "12-07-2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -10,6 +10,10 @@ params:
 ---
 
 ```{r setup, include=FALSE}
+
+# DEBUG
+# library(tidyverse)
+# library(knitr)
 
 knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE,
@@ -141,9 +145,45 @@ DF_new = data_new %>% transmute(
   distinct(id, .keep_all = TRUE) %>% 
   select(-contains("criterio"), -"clasificacion_gse", -"id") %>% mutate(group = "CN")
 
-matched = DF_new %>% rbind(proy_no_na_old)
+matched = DF_new %>% rbind(proy_no_na_old)%>% rename(
+  "Religiosity" = "Religiosidad",
+  "Self-Esteem" = "Autoestima",
+  "Social-Adaptation" = "SASS_Total",
+  "Age" = "age")
 
 ```
+
+
+This document contains the pre-registered analysis plan, and also an exploratory analysis.
+
+# Pre-registered analysis plan
+
+## Descriptives 
+
+```{r}
+sex_table = table(matched$sex)
+females_n = sex_table[1]
+males_n = sex_table[2]
+total = females_n + males_n
+
+age_mean_females = matched %>% filter(sex == 0) %>% select(Age) %>% pull() %>% mean()
+age_mean_males = matched %>% filter(sex == 1) %>% select(Age) %>% pull() %>% mean()
+
+```
+
+`r females_n` females (`r round(females_n/total*100, 2)`%) and `r males_n` males (`r round(males_n/total*100, 2)`%) enrolled in this study, with an average age of `r round(age_mean_females, 2)` and `r round(age_mean_males, 2)`, respectively. 
+
+The following table show the descriptive statistics for each independent and dependent variable.
+
+```{r}
+### TABLE 1(mean, sd, variance, range, assymetry, kurtosis). This should be the table we insert to the paper
+descriptives = psych::describe(matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`)) 
+descriptives = descriptives %>% as.data.frame() %>% select(mean, sd, min, max, skew, kurtosis)
+#rownames(descriptives) = c("Religiosity", "Social Adaptation", "`Self-Esteem`", "Age")
+descriptives %>% kable()
+```
+
+
 ## Reliability
 
 To start the analysis, we will get Cronbach's alpha to check each questionnaires reliability. In general all questionnaires show good levels of reliability.
@@ -175,72 +215,76 @@ psych::alpha(aut)[1] %>% kable
 ```
 
 
-## Exploration
+## Distributions
 
-### Distributions
-
+The following graphs show the distributions of each variable per group.
 
 ```{r cars}
-matched_long = matched %>% select(Religiosidad, SASS_Total, Autoestima, group) %>% 
+matched_long = matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`, group) %>% 
   pivot_longer(cols = 1:3, names_to = "variable", values_to = "values")
 
 ggplot(matched_long, aes(values, fill = as.factor(group))) +
-    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
+    geom_histogram( color="#e9ecef", alpha = 0.6, position = 'identity', bins = 30) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     theme_minimal() +
     facet_wrap(~variable) +
     labs(fill="") 
 
-```
+# Alternative version
+ggplot(matched_long, aes(values, group, fill = group)) + 
+  ggridges::geom_density_ridges(stat = "binline", bins = 30, draw_baseline = FALSE) +
+  ggridges::geom_density_ridges(jittered_points = FALSE, alpha = 0.6) +
+  scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  theme_minimal() +
+  theme(legend.position = "none") + 
+  facet_wrap(~variable) +
+  labs(fill="") 
 
-### Descriptives 
 
-```{r}
-sex_table = table(matched$sex)
-females_n = sex_table[1]
-males_n = sex_table[2]
-total = females_n + males_n
-
-age_mean_females = matched %>% filter(sex == 0) %>% select(age) %>% pull() %>% mean()
-age_mean_males = matched %>% filter(sex == 1) %>% select(age) %>% pull() %>% mean()
-
-```
-
-`r females_n` females (`r round(females_n/total*100, 2)`%) and `r `males_n` males (`r round(males_n/total*100, 2)`%) enrolled in this study, with an average age of `r age_mean_females` and `r age_mean_males`, respectively. 
-
-The following table show the descriptive statistics for each independent and dependent variable.
-
-```{r}
-### TABLE 1(mean, sd, variance, range, assymetry, kurtosis). This should be the table we insert to the paper
-descriptives = psych::describe(matched %>% select(Religiosidad, SASS_Total, Autoestima)) 
-descriptives = descriptives %>% as.data.frame() %>% select(mean, sd, min, max, skew, kurtosis)
-descriptives %>%  kable()
 ```
 
 
 ### Correlations
 
-Independent variables are not correlated. Regarding the dependent variable, it has a medium correlation with self-esteem (r = .43, p < .001), and non correlation with religiosity 
+```{r include=FALSE}
+
+CORREL = correlation::correlation(matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`))
+
+CORREL_RE_SO = CORREL %>% filter(Parameter1 == "Religiosity" & Parameter2 == "Social-Adaptation")
+CORREL_RE_SE = CORREL %>% filter(Parameter1 == "Religiosity" & Parameter2 == "Self-Esteem")
+CORREL_SA_SE = CORREL %>% filter(Parameter1 == "Social-Adaptation" & Parameter2 == "Self-Esteem")
+
+```
+
+`r CORREL_RE_SO$Parameter1` has a `r effectsize::interpret_r(CORREL_RE_SO$r, "cohen1988")` correlation with `r CORREL_RE_SO$Parameter2` (r = `r CORREL_RE_SO$r`, p = `r CORREL_RE_SO$p`).  
+`r CORREL_RE_SE$Parameter1` has a `r effectsize::interpret_r(CORREL_RE_SE$r, "cohen1988")` correlation with `r CORREL_RE_SE$Parameter2` (r = `r CORREL_RE_SE$r`, p = `r CORREL_RE_SE$p`).  
+`r CORREL_SA_SE$Parameter1` has a `r effectsize::interpret_r(CORREL_SA_SE$r, "cohen1988")` correlation with `r CORREL_SA_SE$Parameter2` (r = `r CORREL_SA_SE$r`, p = `r CORREL_SA_SE$p`).  
+
+**[This is not autogenerated]**: Independent variables are not correlated. Regarding the dependent variable (Social-Adaptation), it has a medium correlation with self-esteem (r = .45, p < .01), and non correlation with religiosity. 
 
 ```{r}
-apaTables::apa.cor.table(matched %>% select(Religiosidad, SASS_Total, Autoestima), filename = here::here("outputs/correlation_table.doc"), table.number = 2,show.conf.interval = F)
+
+apaTables::apa.cor.table(matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`), filename = here::here("outputs/correlation_table.doc"), table.number = 2,show.conf.interval = F)
+CORREL
+# summary(CORREL, redundant = TRUE)
 ```
+
 
 ### ANOVA's
 
-We will explore if there are mean differences between groups for each independent variable.
+We explore if there are mean differences between groups for each independent variable.
 
 #### Self-esteem
 
 There is no statistical difference between self-esteem scores in the vulnerable group vs the non-vulnerable group
 
 ```{r}
-summary(aov(Autoestima ~ group,data = matched))
+summary(aov(`Self-Esteem` ~ group,data = matched))
 ```
 
 ```{r}
 ggplot(matched) +
-  aes(x = group, y = Autoestima) +
+  aes(x = group, y = `Self-Esteem`) +
   geom_boxplot()
 ```
 
@@ -249,13 +293,13 @@ ggplot(matched) +
 There is no statistical difference between religiosity scores in the vulnerable group vs the non-vulnerable group
 
 ```{r}
-summary(aov(Religiosidad ~ group,data = matched))
+summary(aov(Religiosity ~ group,data = matched))
 ```
 
 
 ```{r}
 ggplot(matched) +
-  aes(x = group, y = Religiosidad) +
+  aes(x = group, y = Religiosity) +
   geom_boxplot()
 ```
 
@@ -264,118 +308,127 @@ ggplot(matched) +
 Social adaptation scores are higher in the non-vulnerable group than in the non-vulnerable group
 
 ```{r}
-summary(aov(SASS_Total ~group,data = matched))
+summary(aov(`Social-Adaptation` ~group,data = matched))
 ```
-
 
 
 ```{r}
 ggplot(matched) +
-  aes(x = group, y = SASS_Total) +
+  aes(x = group, y = `Social-Adaptation`) +
   geom_boxplot()
 ```
 
 ## Regressions
 
-Since we propose a moderated mediation model, we first need to analyze if our main independent variable predicts variations in religiosity, the independent variable, and variations in self-esteem, the mediator. If it is not the case, then we can reject the moderated mediation model as a hypothesis of how these variables interact between eachother
+Since we propose a moderated mediation model, we first analyze if our main independent variable predicts variations in religiosity, the independent variable, and variations in self-esteem, the mediator. If it is not the case, then we can reject the moderated mediation model as an explanation of how these variables interact between each other.
 
 ### Religiosity
 
-Now we will explore if Religiosity predicts Social Adaptation. As we can see from the outputs below, we can reject the hypothesis that Religiosity predicts Social Adaptation.
+As we can see from the outputs below, we can reject the hypothesis that Religiosity predicts Social Adaptation.
 
 ```{r}
-summary(lm(SASS_Total ~ Religiosidad , matched))
+summary(lm(`Social-Adaptation` ~ Religiosity, matched))
 ```
 
-The following regression explores if Religiosity predicts Self-Esteem. As we can see from the outputs below, we can reject the hypothesis that Religiosity predicts Self-Esteem.
+If we consider moderation, there is still no effect.
 
 ```{r}
-summary(lm(Autoestima ~ Religiosidad, matched))
+matched2 = matched %>% mutate(group = ifelse(group == "EX", 1, 0))
+xz = matched$Religiosity * matched2$group
+
+summary(lm(`Social-Adaptation` ~ Religiosity + group + xz, matched2))
 ```
+
+We can also reject the hypothesis that Religiosity predicts Self-Esteem.
+
+```{r}
+summary(lm(`Self-Esteem` ~ Religiosity, matched))
+```
+
+Also, group has no moderation nor mediation effect on religiosity for predicting levels of self-esteem.
+
+```{r}
+summary(lm(`Self-Esteem` ~ Religiosity + group + xz, matched2))
+```
+
 
 As we can see, from the previous outputs, religiosity has no significant effect either on the independent variable nor on the mediator. Thus, we can say that religiosity does not predict social adaptation through self-esteem in any case.
 
-Just for the sake of exploration we will take a look at how our main variables interact with one another separating the sample by groups. As we can see the only noticeable relationship is between self-esteem and social adaptation. Later on we will explore more this outcome to test if it is significant or not.
 
-```{r}
-p1 = ggplot(matched, aes(x = Autoestima, y = SASS_Total, color = group)) + 
-  geom_point() +
-  stat_smooth(method = "lm", formula = "y ~ x") +
-  xlab("Self-Esteem") +
-  ylab("Social Adaptation") +
-  labs(color = "Group") +
-  theme(legend.position = "none")
+## Exploratory Analysis 
 
-p2 = ggplot(matched, aes(x = Religiosidad, y = SASS_Total, color = group)) + 
-  geom_point() +
-  stat_smooth(method = "lm", formula = "y ~ x") +
-  xlab("Religiosity") +
-  ylab("Social Adaptation") +
-  labs(color = "Group") +
-  ggtitle("")+
-  theme(legend.position = "none")
-
-p3 = ggplot(matched, aes(x = Religiosidad, y = Autoestima, color = group)) + 
-  geom_point() +
-  stat_smooth(method = "lm", formula = "y ~ x") +
-  xlab("Religiosity") +
-  ylab("Self-Esteem") +
-  labs(color = "Group") +
-  ggtitle("")+
-  theme(legend.position = "bottom")
-
-# Join plots using patchwork
-p1 + p2 + p3
-
-```
+Just for the sake of exploration, we will take a deeper look on the significant relationship between self-esteem and social adaptation. Also, because some studies suggest the relationship between religiosity and well-being variables may depend on how religiosity is measured, we will also explore if different measures of religiosity do predict self-esteem and/or social adaptation.
 
 ### Self-Esteem
 
-Although there is no evidence for moderated mediation, we do perceive some differences between social adaptation and self-esteem depending on group in the regression plots. Now we will explore if these apparent differences are statistical ones. We will create two regression models, one to see if self-esteem predicts social adaptation (controlling for religiosity), and other to see if that regression is moderated by living or not in vulnerable populations. We will analyze if both models are statistically different, interpreting p values and effect sizes.
- 
-#### Model1 : Self-esteem and social adaptation regression
+From the output below we can say that self-esteem does predict social adaptation.
 
 ```{r}
-# Usar librería performance
-# linea base: autoestima se relaciona o no con sass. Luego vemos que cambia por grupo (se fortalece)
-# y el modelo es mejor (BIC, AIC..). 
-# Pero luego vemos que esa moderación se pierde cuando sumamos religiosidad.
-model1 = lm(SASS_Total ~ Autoestima + Religiosidad, matched)
-summary(model1)
+xy = matched2$`Self-Esteem` * matched2$group
+
+summary(lm(`Social-Adaptation` ~ `Self-Esteem`, matched))
+```
+
+Also, although group does not determine the strength or direction of the relationship between self-esteem and social adaptation, it does seem to play a part on explaining the process through which both variables are related. 
+
+```{r}
+summary(lm(`Social-Adaptation` ~ `Self-Esteem` + group + xy, matched2))
 ```
 
 
-#### Model2 Self-esteem and social adaptation, moderated by group
+### Religiosity and Social Adaptation in non-vulnerable contexts
+
+Since some studies that show a significant relationship between religiosity and variables related to coping and stress management use religiosity measures of religious practice and/or affiliation, we added these questions in the questionnaire that was applied to the non-vulnerable group. We now check if these variables, religious service attendance and affiliation are related to social adaptation or to self-esteem.
 
 ```{r}
-model2 = lm(SASS_Total ~ Autoestima * group, matched)
-summary(model2)
+DF_new_extended = data_new %>% transmute(
+  id = id,
+  sex = DEMOGR3_02_DIR, # 1 = Hombre; 0 = Mujer ; 2 = otro
+  age = DEMOGR3_01_DIR,
+  edu_level = DEMOGR3_05_DIR,
+  criterio_exclusion_nac =  DEMOGR3_03_DIR, # ¿Usted nació en Chile?
+  criterio_exclusion_nac10 =  DEMOGR3_04_DIR, # ¿Usted vive hace más de 10 años en Chile?
+  criterio_exclusion_psi = DEMOGR3_07_DIR,
+  criterio_exclusion_fis = DEMOGR3_08_DIR,
+  clasificacion_gse = AIM_DIRt,
+  `RS Attendance` = OTRASRELIG_11_DIR,
+  Affiliation = OTRASRELIG_06_DIR,
+  Autoestima = EAR_DIRt,
+  SASS_Total = SASS_DIRt,
+  Religiosidad = SCSORF_DIRt) %>%
+  distinct(id, .keep_all = TRUE) %>%
+  select(-contains("criterio"), -"clasificacion_gse", -"id") %>% mutate(group = "CN") %>% drop_na()
+
+
+matched_extended = DF_new_extended %>% rename(
+  "Religiosity" = "Religiosidad",
+  "Self-Esteem" = "Autoestima",
+  "Social-Adaptation" = "SASS_Total",
+  "Age" = "age")
+
 
 ```
 
-#### ANOVA between both models
-
-The output below shows that there is a significant difference between both models (p < .001)
+The following ANOVA analysis show that there is no difference on social adaptation nor in social adaptation levels depending on different religious service attendance levels nor type of affiliation among people who do not live in vulnerable contexts. This contradicts literature that have found that religiosity has a general positive impact on mental health variables.
 
 ```{r}
-anova(model1, model2)
-```
-
-Below we can see that there is a moderation of group in the capacity that self-esteem has on predicting social adaptation. 27.2% of social adaptation's variance is explained when including the grouping variable, while only 18.3% is explained when not including it.
-
-```{r}
-performance::compare_performance(model1, model2) %>% kable()
+summary(aov(`Self-Esteem` ~ Affiliation, data = matched_extended))
 ```
 
 
-```{r fig.width=7, fig.height = 5}
+```{r}
+summary(aov(`Social-Adaptation` ~ Affiliation, data = matched_extended))
+```
 
-ggplot(matched, aes(x = Autoestima, y = SASS_Total, color = group)) + 
-  geom_point() +
-  stat_smooth(method = "lm", formula = "y ~ x") +
-  xlab("Self-Esteem") +
-  ylab("Social Adaptation") +
-  labs(color = "Group") +
-  theme(legend.position = "right")
+```{r}
+summary(aov(`Self-Esteem` ~ Affiliation, data = matched_extended))
+```
+
+```{r}
+summary(aov(`Social-Adaptation` ~ `RS Attendance`, data = matched_extended))
+```
+
+```{r}
+#write_csv(matched, "/Users/aneel/Documents/matched.csv")
 ```
 

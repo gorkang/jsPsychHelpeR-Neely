@@ -75,33 +75,40 @@ create_DF_matched <- function(DF_clean, DF_joined) {
   # Match -------------------------------------------------------------------
   
   sample_match <- function(DF = DF_matching_new, age, gender, N) {
+
+    # CHECK If no candidates available
+    if (DF %>% filter(DEMOGR3_01_DIR == age & DEMOGR3_02_DIR == gender) %>% nrow() == 0){ 
+      
+      cat(crayon::red("NO candidates available for age = ", age, " and gender = ", gender, "\n"))
+      DF_NEW = tibble(id = NA_character_, ROW = 1)
+      
+    } else {
     
-    # Select N rows ordered by datetime of the participants matching age and sex
-    DF_NEW = 
-      DF %>% 
-      filter(DEMOGR3_01_DIR == age & DEMOGR3_02_DIR == gender) %>% 
-      arrange(DEMOGR3_01_DIR, DEMOGR3_02_DIR, datetime) %>% 
-      slice_head(n = N) %>% 
-      select(id) %>% 
-      mutate(ROW = 1:n())
+      # Select N rows ordered by datetime of the participants matching age and sex
+      DF_NEW = 
+        DF %>% 
+        filter(DEMOGR3_01_DIR == age & DEMOGR3_02_DIR == gender) %>% 
+        arrange(DEMOGR3_01_DIR, DEMOGR3_02_DIR, datetime) %>% 
+        slice_head(n = N) %>% 
+        select(id) %>% 
+        mutate(ROW = 1:n())
+    }
     
-    # Filter DF_matching_old to only have the relevant age and sex
-    DF_OLD = 
-      DF_matching_old %>% 
-      filter(DEMOGR3_01_DIR == age & DEMOGR3_02_DIR == gender) %>% 
-      mutate(ROW = 1:n())
-    
-    # Join the selected DF_NEW participants
-    DF_OLD %>% 
-      left_join(DF_NEW, by = "ROW")
-    
+      # Filter DF_matching_old to only have the relevant age and sex
+      DF_OLD = 
+        DF_matching_old %>% 
+        filter(DEMOGR3_01_DIR == age & DEMOGR3_02_DIR == gender) %>% 
+        mutate(ROW = 1:n())
+      
+      # Join the selected DF_NEW participants
+      DF_OLD %>% 
+        left_join(DF_NEW, by = "ROW")
   }
   
   DF_new_matched = 
     1:nrow(DF_matching_old_COUNT) %>% 
     map_df(~ sample_match(age = DF_matching_old_COUNT$DEMOGR3_01_DIR[.x], gender = DF_matching_old_COUNT$DEMOGR3_02_DIR[.x], N = DF_matching_old_COUNT$count_old[.x]))
-  
-  
+
   
   # Save files --------------------------------------------------------------
   save_files(DF_new_matched, short_name_scale = "matched", is_scale = FALSE)
