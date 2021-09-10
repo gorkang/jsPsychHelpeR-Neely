@@ -23,6 +23,13 @@
     cat(crayon::green("All the necessary packages are present\n"))
   }
 
+
+# Github only -------------------------------------------------------------
+
+  if (!require('papaja')) remotes::install_github("crsh/papaja"); library('papaja')
+  
+  
+  
   # If you have issues with DT::datables()
   # if (webshot::is_phantomjs_installed() == FALSE) webshot::install_phantomjs()
   
