@@ -1,24 +1,21 @@
 ---
 title: "Data Analysis Religiosity's Part on Social Adaptation"
-author: "Neely-Prado, Navarrete, van Elk, Hola, Huepe"
+author: "Neely-Prado, Navarrete, van Elk, Huepe"
 date: "12-07-2021"
-output: html_document
-editor_options: 
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
   chunk_output_type: console
 params:
-  depends: ""
+  depends: ''
 ---
 
 ```{r setup, include=FALSE}
 
-# DEBUG
-# library(tidyverse)
-# library(knitr)
-
 knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE,
                       warning = FALSE)
-
 
 # Preparation old data 
 
@@ -45,7 +42,7 @@ DF_old =
   select(ISD07, ISD04, ISD05, ISD08, ISD14, ISD28,
          Reli01:Reli10, Religiosidad,
          EAR01, EAR02, EAR03, EAR04, EAR05,EAR06,EAR07,EAR08,EAR09,EAR10, Autoestima,
-         SASS01:SASS21, SASS_Total) %>% 
+         SASS01:SASS21, SASS_Total, Estres_Percibido) %>% 
   filter(grepl("Chile|Chilena|chile|chilena|chileno|Chileno", ISD04))
 
 DF_old[DF_old=="Muy en desacuerdo"]<-"4"
@@ -141,7 +138,8 @@ DF_new = data_new %>% transmute(
   SASS21 = SASS_22_DIR,
   Autoestima = EAR_DIRt,
   SASS_Total = SASS_DIRt,
-  Religiosidad = SCSORF_DIRt) %>% 
+  Religiosidad = SCSORF_DIRt,
+  Estres_Percibido = PSS_DIRt) %>% 
   distinct(id, .keep_all = TRUE) %>% 
   select(-contains("criterio"), -"clasificacion_gse", -"id") %>% mutate(group = "CN")
 
@@ -177,10 +175,9 @@ The following table show the descriptive statistics for each independent and dep
 
 ```{r}
 ### TABLE 1(mean, sd, variance, range, assymetry, kurtosis). This should be the table we insert to the paper
-descriptives = psych::describe(matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`)) 
-descriptives = descriptives %>% as.data.frame() %>% select(mean, sd, min, max, skew, kurtosis)
-#rownames(descriptives) = c("Religiosity", "Social Adaptation", "`Self-Esteem`", "Age")
-descriptives %>% kable()
+for_descriptives = matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`, group)
+descriptives = psych::describeBy(for_descriptives %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`), group = for_descriptives$group)
+descriptives
 ```
 
 
@@ -191,7 +188,6 @@ To start the analysis, we will get Cronbach's alpha to check each questionnaires
 ### Religiosity 
 
 ```{r}
-# Reliability -------------------------------------------------------------
 rel = matched %>% select(Reli01:Reli10) 
 psych::alpha(rel)[1] %>% kable()
 ```
@@ -202,14 +198,13 @@ psych::alpha(rel)[1] %>% kable()
 sass = matched %>% mutate(
   sass_01final = ifelse(!is.na(SASS01), SASS01, SASS02)
 ) %>% select(sass_01final, SASS03:SASS21)
-psych::alpha(sass)[1] %>% kable()
+psych::alpha(sass, check.keys=TRUE)[1] %>% kable()
 ```
 
 
 ### Self-Esteem
 
 ```{r}
-
 aut = matched %>% select(EAR01:EAR10)
 psych::alpha(aut)[1] %>% kable
 ```
@@ -240,11 +235,12 @@ ggplot(matched_long, aes(values, group, fill = group)) +
   facet_wrap(~variable) +
   labs(fill="") 
 
-
 ```
 
 
-### Correlations
+## Correlations
+
+### Total Scores
 
 ```{r include=FALSE}
 
@@ -268,24 +264,46 @@ CORREL
 # summary(CORREL, redundant = TRUE)
 ```
 
-Papaja Table
-```{r papaja-table, results='asis'}
+### Network correlations between items
 
-x <- corx(matched %>% select(Religiosity, `Social-Adaptation`, `Self-Esteem`),
-          triangle = "lower",
-          stars = c(0.05, 0.01, 0.001),
-          describe = c(`$M$` = mean, `$SD$` = sd))
+The following network plot aims at discovering items between questionnaires that could be correlated between eachother. As we can see some items of the Social Adaptation Self-Evaluation Scale (SASS) do correlate with some items of Rosenberg's Self-Esteem Scale (EAR), while religiosity items do not correlate at all with either.
 
-papaja::apa_table(x$apa, # apa contains the data.frame needed for apa_table
-                  caption = "Correlation matrix",
-                  note = "* p < 0.05; ** p < 0.01; *** p < 0.001",
-                  escape = F)
+```{r}
+tidy_cors = matched %>% select(-Estres_Percibido, -group, -Age, -sex, -edu_level) %>% 
+  corrr::correlate() %>% 
+  corrr::stretch()
+```
 
+```{r}
+graph_cors <- tidy_cors %>%
+  filter(abs(r) > .3) %>%
+  graph_from_data_frame(directed = FALSE)
 
+# graph_cors
 ```
 
 
-### ANOVA's
+```{r fig.height=10, fig.width=16}
+plot_ggraph = 
+  ggraph(graph_cors) +
+  geom_edge_link(aes(edge_alpha = abs(r), edge_width = abs(r), color = r)) +
+  guides(edge_alpha = "none", edge_width = "none") +
+  scale_edge_colour_gradientn(limits = c(-1, 1), colors = c("firebrick2", "dodgerblue2")) +
+  geom_node_point(color = "#C0C0C0", size = 5, alpha = .8) +
+  geom_node_text(aes(label = name), repel = TRUE) +
+  theme_graph()
+
+# Show plot
+plot(plot_ggraph)
+
+# Save plot
+tiff(here::here("outputs/fig2.tiff"), units="in", width=10, height=5, res=300) 
+plot(plot_ggraph)
+invisible(dev.off())
+```
+
+
+## ANOVA's
 
 We explore if there are mean differences between groups for each independent variable.
 
@@ -300,7 +318,8 @@ summary(aov(`Self-Esteem` ~ group,data = matched))
 ```{r}
 ggplot(matched) +
   aes(x = group, y = `Self-Esteem`) +
-  geom_boxplot()
+  geom_boxplot() + 
+  theme_minimal()
 ```
 
 #### Religiosity
@@ -315,7 +334,8 @@ summary(aov(Religiosity ~ group,data = matched))
 ```{r}
 ggplot(matched) +
   aes(x = group, y = Religiosity) +
-  geom_boxplot()
+  geom_boxplot() +
+  theme_minimal()
 ```
 
 #### Social Adaptation
@@ -330,7 +350,8 @@ summary(aov(`Social-Adaptation` ~group,data = matched))
 ```{r}
 ggplot(matched) +
   aes(x = group, y = `Social-Adaptation`) +
-  geom_boxplot()
+  geom_boxplot() +
+  theme_minimal()
 ```
 
 ## Regressions
@@ -391,6 +412,36 @@ summary(lm(`Social-Adaptation` ~ `Self-Esteem` + group + xy, matched2))
 ```
 
 
+### Religiosity, Self-Esteem and Perceived Stress
+
+Since some studies that show a significant relationship between religiosity to coping and stress management, we added a perceived stress scale, and tested if religiosity predicts lower perceived stress through self-esteem.
+
+There is no effect of religiosity over perceived stress.
+
+```{r}
+summary(lm(Estres_Percibido ~ Religiosity, matched2))
+```
+
+If we consider the experimental group, there is also no moderation nor mediation effect.
+
+```{r}
+summary(lm(Estres_Percibido ~ Religiosity + group + xz, matched2))
+```
+
+However, we can see that self-esteem does predict perceived stress
+
+```{r}
+summary(lm(Estres_Percibido ~ `Self-Esteem`, matched2))
+```
+
+And that religiosity does predict perceived stress when we take self-esteem into account, finding both a moderation and a mediation effect.
+
+```{r}
+xw = matched2$`Self-Esteem` * matched2$Religiosity
+summary(lm(Estres_Percibido ~ Religiosity + `Self-Esteem` + xw, matched2))
+```
+
+
 ### Religiosity and Social Adaptation in non-vulnerable contexts
 
 Since some studies that show a significant relationship between religiosity and variables related to coping and stress management use religiosity measures of religious practice and/or affiliation, we added these questions in the questionnaire that was applied to the non-vulnerable group. We now check if these variables, religious service attendance and affiliation are related to social adaptation or to self-esteem.
@@ -426,24 +477,26 @@ matched_extended = DF_new_extended %>% rename(
 
 The following ANOVA analysis show that there is no difference on social adaptation nor in social adaptation levels depending on different religious service attendance levels nor type of affiliation among people who do not live in vulnerable contexts. This contradicts literature that have found that religiosity has a general positive impact on mental health variables.
 
+#### Affiliation and Self-Esteem
+
 ```{r}
 summary(aov(`Self-Esteem` ~ Affiliation, data = matched_extended))
 ```
 
+#### Affiliation and Social Adaptation
 
 ```{r}
 summary(aov(`Social-Adaptation` ~ Affiliation, data = matched_extended))
 ```
 
+#### Religious Service Attendance and Self-Esteem
+
 ```{r}
-summary(aov(`Self-Esteem` ~ Affiliation, data = matched_extended))
+summary(aov(`Self-Esteem` ~ `RS Attendance`, data = matched_extended))
 ```
+
+#### Religious Service Attendance and Social Adaptation
 
 ```{r}
 summary(aov(`Social-Adaptation` ~ `RS Attendance`, data = matched_extended))
 ```
-
-```{r}
-#write_csv(matched, "/Users/aneel/Documents/matched.csv")
-```
-

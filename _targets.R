@@ -21,8 +21,8 @@
   # Packages to load
   main_packages = c("cli", "crayon", "furrr", "patchwork", "renv", "tarchetypes", "targets", "testthat")
   data_preparation_packages = c("clock", "dplyr", "forcats", "here", "janitor", "purrr", "readr", "stringr", "tibble", "tidyr") 
-  data_analysis_packages = c("apaTables", "broom", "broom.mixed", "corrplot", "corx", "emmeans", "gmodels", "gt", "gtsummary", "irr", "knitr", "lavaan", "lme4", "parameters", "performance", "psych", "sjPlot", "stargazer")
-  data_visualization_packages = c("ggalluvial", "ggridges")
+  data_analysis_packages = c("apaTables", "broom", "broom.mixed", "corrplot", "corrr", "corx", "emmeans", "gmodels", "gt", "gtsummary", "irr", "knitr", "lavaan", "lme4", "parameters", "performance", "psych", "sjPlot", "stargazer")
+  data_visualization_packages = c("ggalluvial", "ggraph", "ggridges", "igraph")
   non_declared_dependencies = c("qs", "visNetwork", "webshot", "performance", "bs4Dash", "shinybusy", "clustermq", "shinyWidgets")
   extra_packages = c("shrtcts")
   packages_to_load = c(main_packages, data_preparation_packages, data_analysis_packages, data_visualization_packages, non_declared_dependencies, extra_packages)
