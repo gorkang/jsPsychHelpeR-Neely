@@ -1,6 +1,6 @@
 ---
 title: "Data Analysis Religiosity's Part on Social Adaptation"
-author: "Neely-Prado, Navarrete, van Elk, Huepe"
+author: "Alejandra Neely-Prado, Michiel van Elk, Gorka Navarrete, Fernanda Hola, David Huepe"
 date: "12-07-2021"
 output:
   html_document: default
@@ -297,7 +297,7 @@ plot_ggraph =
 plot(plot_ggraph)
 
 # Save plot
-tiff(here::here("outputs/fig2.tiff"), units="in", width=10, height=5, res=300) 
+tiff(here::here("outputs/plots/fig2.tiff"), units="in", width=10, height=5, res=300) 
 plot(plot_ggraph)
 invisible(dev.off())
 ```

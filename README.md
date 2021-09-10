@@ -5,7 +5,7 @@ Please, address any correspondence to [aleneely\@gmail.com](mailto:aleneely@gmai
 
 Manuscript title: Religiosity's part on social adaptation  
 Manuscript ID: 519623  
-Authors: Alejandra Neely-Prado, Gorka Navarrete, David Huepe, Michiel van Elk  
+Authors: Alejandra Neely-Prado, Michiel van Elk, Gorka Navarrete, Fernanda Hola, David Huepe  
 Journal: Frontiers in Psychology, section Personality and Social Psychology  
 Article type: Registered Report  
 URL: https://github.com/gorkang/jsPsychHelpeR-Neely

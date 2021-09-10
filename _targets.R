@@ -33,10 +33,6 @@
                  error = "workspace") # Needed to load workspace on error to debug
   
 
-  # Make sure tests run always
-  # if (file.exists("_targets/objects/TESTS") == TRUE ) targets::tar_invalidate(matches("TESTS"))
-
-  
 
 # Define targets -------------------------------------------------------------
   
@@ -60,11 +56,10 @@ targets <- list(
   
   ## Prepare tasks -----------------------------------------------------------
   
-  # SENSITIVE
+  # SENSITIVE TASK
   tar_target(df_DEMOGR3, prepare_DEMOGRsensitive(short_name_scale_str = "DEMOGR3")),
   
-  # [TODO]: Each of the individual tasks should have specific hardcoded TESTS!
-  # [REMEMBER]: the target name needs to be ==  df_[short_name_scale_str]
+  # Other TASKS
   tar_target(df_AIM, prepare_AIM(DF_clean, short_name_scale_str = "AIM")),
   tar_target(df_COVIDCONTROL, prepare_COVIDCONTROL(DF_clean, short_name_scale_str = "COVIDCONTROL")),
   tar_target(df_EAR, prepare_EAR(DF_clean, short_name_scale_str = "EAR")),
@@ -72,6 +67,7 @@ targets <- list(
   tar_target(df_PSS, prepare_PSS(DF_clean, short_name_scale_str = "PSS")),
   tar_target(df_SASS, prepare_SASS(DF_clean, short_name_scale_str = "SASS")),
   tar_target(df_SCSORF, prepare_SCSORF(DF_clean, short_name_scale_str = "SCSORF")),
+  
   
   ## Join tasks --------------------------------------------------------------
   
@@ -99,20 +95,8 @@ targets <- list(
              output_file = paste0("../outputs/reports/descriptives_table1.html")),
 
   
-  # Models
-  # tar_target(model_E1, analysis_model_E1(DF_analysis)),
-
-
-  # Tables and plots use the model (e.g. model_XXX) as input.  
-  # Most model objects in R include the data used to fit the model
-
-  # Tables
-  # tar_target(table1_model_E1, analysis_model_E1_table(model_E1)),
-
   # Plots
   tar_target(plots_descriptive, analysis_descriptive_plots(DF_joined)),
-  # tar_target(plot1_model_E1, analysis_model_E1_plot(model_E1)),
-  
   
   
 
@@ -160,13 +144,9 @@ targets <- list(
                            last_task = "COVIDCONTROL", 
                            goal = 800),
              output_file = paste0("../outputs/reports/report_PROGRESS_", pid_target , ".html"))
-
-  
-
 )
 
 
 # Declare pipeline --------------------------------------------------------
 
   targets
-  
