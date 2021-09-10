@@ -1,12 +1,3 @@
-
-###################### TODO ##############################################
-# https://github.com/gorkang/jsPsychHelpeR-Neely/issues/1
-
-# WARNING IN ANALYSIS: SHOULD BE psych::alpha(sass, check.keys=TRUE)[1] %>% kable()
-
-##########################################################################
-
-
 # Initial setup -----------------------------------------------------------
 
   # Run the fist time or when you have an error
@@ -18,7 +9,10 @@
   # Run only if you want to re-do the data preparation and analysis
   # targets::tar_destroy() # Destroy cache (_targets folder)
 
-  # Run project
+  # Invalidate a specific target
+  # targets::tar_invalidate("TESTS")
+  
+# Run project
   targets::tar_make() # Run project
   
 
@@ -30,7 +24,7 @@
   # See objects created
   targets::tar_objects()
   
-  # Load objects
+  # Load specific object
   targets::tar_load("DF_analysis")
   DF_analysis
   
