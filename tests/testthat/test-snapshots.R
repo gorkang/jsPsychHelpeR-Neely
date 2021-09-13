@@ -28,14 +28,23 @@ testthat::test_that('Check if the snapshots do not change', {
   # testthat edition
   testthat::local_edition(3)
 
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_AIM"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_COVIDCONTROL"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_DEMOGR3"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_EAR"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_OTRASRELIG"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_PSS"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_SASS"))
-  testthat::expect_snapshot_file(here::here("_targets/objects/df_SCSORF"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_AIM"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_COVIDCONTROL"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_DEMOGR3"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_EAR"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_OTRASRELIG"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_PSS"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_SASS"))
+  # testthat::expect_snapshot_file(here::here("_targets/objects/df_SCSORF"))
+  
+  testthat::expect_snapshot_file(here::here("outputs/data/df_AIM.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_COVIDCONTROL.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_DEMOGR3.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_EAR.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_OTRASRELIG.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_PSS.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_SASS.csv"))
+  testthat::expect_snapshot_file(here::here("outputs/data/df_SCSORF.csv"))
 
 })
 
