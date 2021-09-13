@@ -30,7 +30,7 @@
   
   # target options (packages, errors...)
   tar_option_set(packages = packages_to_load, # Load packages for all targets
-                 error = "workspace") # Needed to load workspace on error to debug
+                 workspace_on_error = TRUE) # Needed to load workspace on error to debug
   
 
 
