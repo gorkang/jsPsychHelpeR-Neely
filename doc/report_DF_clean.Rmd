@@ -20,7 +20,6 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 targets::tar_load(DF_clean)
 targets::tar_load(DF_raw)
-DF = DF_clean
 
 ```
 
@@ -42,7 +41,7 @@ number_participants = DF_raw %>% distinct(id) %>% nrow()
 number_tasks = DF_raw %>% distinct(experimento) %>% nrow()
 
 text_participants = 
-  DF_raw %>% 
+  DF_clean %>% 
   count(id, experimento) %>% 
   count(id, name = "tasks") %>% 
   count(tasks, name = "people") %>% 
@@ -136,7 +135,7 @@ DT::datatable(summary_table3, filter = 'top', options = list(dom = 'ltip', pageL
 ### Order of tasks
 
 ```{r summary-position, echo=FALSE}
-summary_position = DF %>% 
+summary_position = DF_clean %>% 
   distinct(id, experimento, datetime) %>% 
   group_by(id) %>% 
   arrange(id, (datetime)) %>% 
@@ -163,7 +162,7 @@ DT::datatable(summary_position, filter = 'top', options = list(dom = 'ltip', pag
 ```{r echo=FALSE}
 
 # Alternative trialid for each scale
-trialid_table = DF %>% 
+trialid_table = DF_clean %>% 
   filter(trial_type != "fullscreen") %>% 
   select(experimento, trial_type, trialid, response) %>% 
   group_by(experimento) %>% 
@@ -186,7 +185,7 @@ DT::datatable(trialid_table,
 ```{r echo=FALSE}
 
 # trialid and question_text for each experiment
-trialid_detail_table = DF %>% 
+trialid_detail_table = DF_clean %>% 
   select(experimento, trialid, stimulus) %>% 
   group_by(experimento) %>% 
   distinct(trialid, stimulus) 
@@ -208,7 +207,7 @@ Only showing multi-choice, slider and liker scales.
 ```{r echo=FALSE}
 
 # Alternatives responses for each scale
-responses_table = DF %>% 
+responses_table = DF_clean %>% 
   # distinct(trial_type)
   select(experimento, trial_type, trialid, response) %>% 
   filter(trial_type %in% c("survey-multi-choice-vertical", "survey-multi-choice-horizontal", "likert", "html-slider-response")) %>% 
@@ -230,7 +229,7 @@ DT::datatable(responses_table,
 
 ```{r echo=FALSE}
 #   DF_responses =
-#     DF %>%
+#     DF_clean %>%
 #     count(trialid, experimento, response) %>%
 #     group_by(experimento, trialid) %>%
 #     summarise(N = n(),

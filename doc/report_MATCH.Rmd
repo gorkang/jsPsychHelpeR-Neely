@@ -74,7 +74,7 @@ editor_options:
 
 ## Summary {.tabset}
 
-`r nrow(DF_joined %>% drop_na(COVIDCONTROL_01_DIR))` participants completed the full protocol. After filtering by exclusion criteria, we can match `r TABLE_matching$MATCHED` out of  `r TABLE_matching$NEEDED`. `r TABLE_matching$MISSING`  to go (`r round(TABLE_matching$MISSING / TABLE_matching$NEEDED, 2) * 100`%).  
+`r DF_clean %>% count(id, experimento) %>% count(id, name = "tasks") %>% count(tasks, name = "people") %>% filter(tasks == 8) %>% pull(people)` participants completed the full protocol. After filtering by exclusion criteria, we can match `r TABLE_matching$MATCHED` out of  `r TABLE_matching$NEEDED`. `r TABLE_matching$MISSING`  to go (`r round(TABLE_matching$MISSING / TABLE_matching$NEEDED, 2) * 100`%).  
 
 ---  
 
