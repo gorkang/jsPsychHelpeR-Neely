@@ -308,6 +308,59 @@ plot(plot_ggraph)
 invisible(dev.off())
 ```
 
+## ANOVA analysis to evaluate group differences in Self-Esteem, Religiosity and Social Adaptation
+
+
+```{r}
+  matched %>% 
+  select(group, `Self-Esteem`, Religiosity, `Social-Adaptation`) %>% 
+  tbl_summary(by = group,
+              statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
+  gtsummary::add_difference(test = all_continuous() ~ "ancova") 
+
+```
+
+---  
+
+
+There is no statistical difference between self-esteem scores in the vulnerable group vs the non-vulnerable group
+
+```{r}
+summary(aov(`Self-Esteem` ~ group, data = matched))
+```
+
+```{r}
+ggplot(matched) +
+  aes(x = group, y = `Self-Esteem`) +
+  geom_boxplot()
+```
+
+There is no statistical difference between religiosity scores in the vulnerable group vs the non-vulnerable group
+
+```{r}
+summary(aov(Religiosity ~ group,data = matched))
+```
+
+
+```{r}
+ggplot(matched) +
+  aes(x = group, y = Religiosity) +
+  geom_boxplot()
+```
+
+Social adaptation scores are higher in the non-vulnerable group than in the non-vulnerable group
+
+```{r}
+summary(aov(`Social-Adaptation` ~group,data = matched))
+```
+
+
+```{r}
+ggplot(matched) +
+  aes(x = group, y = `Social-Adaptation`) +
+  geom_boxplot()
+```
+
 
 ## Regression analysis between Religiosity, Self-Esteem and Perceived Stress
 
